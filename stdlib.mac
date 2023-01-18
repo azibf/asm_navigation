@@ -1,0 +1,55 @@
+%macro CLRSCR 0
+
+    CALL _clrscr
+
+%endmacro
+
+%macro PUTCHAR 1
+
+    PUSH %1
+    CALL _putchar
+    ADD SP, 2
+
+%endmacro
+
+%macro GETCHAR 0
+
+    CALL _getchar
+
+%endmacro
+
+%macro PUTS 1
+
+    PUSH %1
+    CALL _puts
+    ADD SP, 2
+
+%endmacro
+
+
+%macro READLINE 2
+    
+    PUSH %1
+    PUSH %2
+    CALL _readLine
+    ADD SP, 4
+
+%endmacro
+
+
+%macro NUM2STR 2
+
+    PUSH %1
+    PUSH %2
+    CALL _num2str
+    ADD SP, 4
+
+%endmacro
+
+%macro STR2NUM 1
+    
+    PUSH %1
+    CALL _str2num
+    ADD SP, 2
+
+%endmacro
