@@ -10,9 +10,10 @@ BITS 16
 
 %endmacro
 
-%macro STR2FLT 0
-
+%macro STR2FLT 1
+    PUSH %1
     CALL _str2flt
+    ADD SP, 2
 
 %endmacro
 
@@ -38,21 +39,30 @@ start:
 	PUTS     prompt_1
 
 	READLINE in_buffer, 1
-    ; тут нужно сделать ввод переменных
-	PUSH in_buffer
-	CALL _str2flt
-	ADD SP, 2
+    STR2FLT in_buffer
+    MOV DWORD[h1], DWORD[outb]
 
-	MOV AX, WORD[outb + 2]
-	NUM2STR AX, outa
-	PUTS outa
+    READLINE in_buffer, 1
+    STR2FLT in_buffer
+    MOV DWORD[h2], DWORD[outb]
 
-	MOV BX, WORD[outb]
-	NUM2STR BX, outa
-	PUTS outa
+    READLINE in_buffer, 1
+    STR2FLT in_buffer
+    MOV DWORD[d1], DWORD[outb]
+
+    READLINE in_buffer, 1
+    STR2FLT in_buffer
+    MOV DWORD[d2], DWORD[outb]
+
+    READLINE in_buffer, 1
+    STR2FLT in_buffer
+    MOV DWORD[t_g1], DWORD[outb]
+
+    READLINE in_buffer, 1
+    STR2FLT in_buffer
+    MOV DWORD[t_g2], DWORD[outb]
 
 	CLI
-
 	HLT
 
 ; bool _solve(unsigned short x);
@@ -68,9 +78,9 @@ _solve:
     FSINCOS
     FLD WORD [d2]
     FSINCOS ; COS(D2) SIN(D2) COS(D1) SIN(D1) COS(D_T)
-    FMULP ST(2), ST(0) ; SIN(D2) COS(D1)*COS(D2) SIN(D1) COS(D_T)
-    FMULP ST(2), ST(0) ; COS(D1)*COS(D2) SIN(D1)*SIN(D2) COS(D_T)
-    FMULP ST(2), ST(0) ; SIN(D1)*SIN(D2) COS(D_T)*COS(D1)*COS(D2)
+    FMULP st2, st0 ; SIN(D2) COS(D1)*COS(D2) SIN(D1) COS(D_T)
+    FMULP st2, st0 ; COS(D1)*COS(D2) SIN(D1)*SIN(D2) COS(D_T)
+    FMULP st2, st0 ; SIN(D1)*SIN(D2) COS(D_T)*COS(D1)*COS(D2)
     FADDP
     FARCCOS
     FST WORD [D12]
@@ -78,7 +88,7 @@ _solve:
     FPTAN
     FLD WORD [d1]
     FPTAN
-    FDIVP ST(0), ST(1)
+    FDIVP st0, st1
     FLD WORD [D12]
     FSIN
     FLD WORD [d1]
@@ -86,7 +96,7 @@ _solve:
     FMULP
     FLD WORD [d2]
     FSIN
-    FDIVP ST(0), ST(1)
+    FDIVP st0, st1
     FSUBP
     FARCCOS
     FSTP WORD [q1]
@@ -95,7 +105,7 @@ _solve:
     FPTAN
     FLD WORD [h1]
     FPTAN
-    FDIVP ST(0), ST(1)
+    FDIVP st0, st1
     FLD WORD [D12]
     FSIN
     FLD WORD [h1]
@@ -103,7 +113,7 @@ _solve:
     FMULP
     FLD WORD [h2]
     FSIN
-    FDIVP ST(0), ST(1)
+    FDIVP st0, st1
     FSUBP
     FARCCOS
     FST WORD [dq1]
@@ -115,9 +125,9 @@ _solve:
     FSINCOS
     FLD WORD [d1]
     FSINCOS ; COS(D1) SIN(D1) COS(H1) SIN(H1) COS(DDQ)
-    FMULP ST(2), ST(0) ;  SIN(D1) COS(H1)*COS(D1) SIN(H1) COS(DDQ)
-    FMULP ST(2), ST(0) ;  COS(H1)*COS(D1) SIN(H1)*SIN(D1) COS(DDQ)
-    FMULP ST(2), ST(0) ;  SIN(H1)*SIN(D1) COS(DDQ)*COS(H1)*COS(D1)
+    FMULP st2, st0 ;  SIN(D1) COS(H1)*COS(D1) SIN(H1) COS(DDQ)
+    FMULP st2, st0 ;  COS(H1)*COS(D1) SIN(H1)*SIN(D1) COS(DDQ)
+    FMULP st2, st0 ;  SIN(H1)*SIN(D1) COS(DDQ)*COS(H1)*COS(D1)
     FADDP
     FARCSIN
     FST WORD [f]
@@ -131,7 +141,7 @@ _solve:
     FMULP
     FLD WORD [h1]
     FSIN
-    FDIVP ST(0), ST(1)
+    FDIVP st0, st1
     FSUBP
     FST WORD [t1]
     FST WORD [t_m11]
@@ -139,12 +149,12 @@ _solve:
     FSUBP
     FST WORD [t_m12]
     FLD WORD [t_g1]
-    FSUBP ST(1) - ST(0)
+    FSUBP st1 - st0
     FLD WORD [t_g2]
     FADDP
     FLD WORD [t_g1]
     FLD WORD [t_m11]
-    FSUBP ST(0), ST(1)
+    FSUBP st0, st1
     FADDP
     ;T_M21, T_M22
     FXCH
@@ -153,9 +163,9 @@ _solve:
     FSINCOS
     FLD WORD [f]
     FSINCOS
-    FMULP ST(2), ST(0)
-    FMULP ST(2), ST(0)
-    FMULP ST(2), ST(0)
+    FMULP st2, st0
+    FMULP st2, st0
+    FMULP st2, st0
     FADDP
     FARCSIN
     FLD WORD [h2]
@@ -168,9 +178,9 @@ _solve:
     FSINCOS
     FLD WORD [f]
     FSINCOS
-    FMULP ST(2), ST(0)
-    FMULP ST(2), ST(0)
-    FMULP ST(2), ST(0)
+    FMULP st2, st0
+    FMULP st2, st0
+    FMULP st2, st0
     FADDP
     FARCSIN
     FLD WORD [h2]
@@ -188,29 +198,29 @@ _solve:
     FLD WORD [t_m12]
     _end:
     FLD WORD [t_g1]
-    FSUBP ST(1), ST(0)
+    FSUBP st1, st0
     FSTP WORD [u]
     RET
 
 _farccos:
-    FLD ST(0)
-    FLD ST(0)
+    FLD st0
+    FLD st0
     FMULP
     FLD1
-    FSUBP ST(0), ST(1)
+    FSUBP st0, st1
     FSQRT
-    FDIVP ST(0), ST(1)
+    FDIVP st0, st1
     FPATAN
     RET
 
 _farcsin:
-    FLD ST(0)
-    FLD ST(0)
+    FLD st0
+    FLD st0
     FMULP
     FLD1
-    FSUBP ST(0), ST(1)
+    FSUBP st0, st1
     FSQRT
-    FDIVP ST(1), ST(0)
+    FDIVP st1, st0
     FPATAN
     RET
 
